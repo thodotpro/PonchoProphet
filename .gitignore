@@ -1,0 +1,16 @@
+# .gitignore  (put this in the root of your project)
+
+# Python virtual environment
+backend/.venv/
+backend/__pycache__/
+backend/**/__pycache__/
+backend/**/*.pyc
+
+# Node modules
+frontend/node_modules/
+
+# Environment variables — NEVER commit your API keys
+.env
+
+# Docker build artifacts
+**/.DS_Store
