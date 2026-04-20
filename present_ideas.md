@@ -1,0 +1,3 @@
+---
+- Comic standing in rain with wrong clothing. Gets out phone. Zoom in on Phone and show app.
+---
