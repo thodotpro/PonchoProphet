@@ -2,35 +2,27 @@
 
 # --- Web framework ---
 fastapi==0.115.0
-uvicorn[standard]==0.30.6      # ASGI server that runs FastAPI
-                                # [standard] adds websocket + reload support
+uvicorn[standard]==0.30.6
 
-# --- LangGraph + LangChain ---
-langgraph==0.2.28              # The agent graph framework
-langchain-core==0.3.15         # Shared primitives (BaseMessage, etc.)
-                                # langchain-core is a lighter install than
-                                # the full "langchain" package — prefer it
+# --- LangGraph ecosystem ---
+# No version pins on any of these — they are tightly coupled to each other
+# and release together. Let pip find a consistent set automatically.
+langgraph
+langchain-core
+langgraph-checkpoint-redis
 
-# --- LLM providers (install both, only one is used at runtime) ---
-anthropic==0.34.2
-openai==1.51.0
+# --- LLM providers ---
+anthropic
+openai
 
-# --- Redis ---
-redis==5.0.8                   # Python client for talking to the Redis server
-langgraph-checkpoint-redis==0.4.1  # LangGraph's RedisSaver checkpointer
-                                    # This is SEPARATE from the redis client above.
-                                    # redis = phone to call Redis
-                                    # langgraph-checkpoint-redis = LangGraph knowing
-                                    # how to use that phone for checkpointing
+# --- Redis client ---
+redis
 
-# --- HTTP client (for Open-Meteo calls in weather_api.py) ---
-httpx==0.27.2                  # Async-native HTTP client, better than requests
-                                # for FastAPI's async context
+# --- HTTP client ---
+httpx
 
 # --- Data validation ---
-pydantic==2.9.2                # Used by FastAPI for request/response schemas
-                                # Already installed as a FastAPI dependency,
-                                # but pin it explicitly so the version is predictable
+pydantic
 
 # --- Utilities ---
-python-dotenv==1.0.1           # Loads .env file into os.environ
+python-dotenv==1.0.1
