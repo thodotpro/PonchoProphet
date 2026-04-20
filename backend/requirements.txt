@@ -17,7 +17,7 @@ openai==1.51.0
 
 # --- Redis ---
 redis==5.0.8                   # Python client for talking to the Redis server
-langgraph-checkpoint-redis==1.0.3  # LangGraph's RedisSaver checkpointer
+langgraph-checkpoint-redis==0.4.1  # LangGraph's RedisSaver checkpointer
                                     # This is SEPARATE from the redis client above.
                                     # redis = phone to call Redis
                                     # langgraph-checkpoint-redis = LangGraph knowing

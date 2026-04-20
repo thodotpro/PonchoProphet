@@ -22,4 +22,13 @@ def get_checkpointer():
     and the rest of the code works identically — just without durability.
     """
     redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-    return RedisSaver.from_conn_string(redis_url)
+    checkpointer = RedisSaver.from_conn_string(redis_url)
+
+
+    # This creates the required search indices in Redis.
+    # Safe to call every time — it only does work on the very first run.
+    # Without this you'll get an index-not-found error on the first graph invoke.
+    checkpointer.setup()
+
+    return checkpointer
+
