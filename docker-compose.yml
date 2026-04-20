@@ -1,0 +1,39 @@
+# docker-compose.yml
+version: "3.9"
+
+services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    # 🎓 LEARNING COMPLEXITY: In production you'd add persistence flags,
+    # auth, and memory limits. Here we keep it ephemeral on purpose —
+    # restart the container and all conversation history is gone.
+    # That's a good thing to observe while learning.
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - LLM_PROVIDER=${LLM_PROVIDER}          # "openai" or "anthropic"
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - WEATHER_CACHE_TTL_SECONDS=${WEATHER_CACHE_TTL_SECONDS:-1800}
+    depends_on:
+      - redis
+    volumes:
+      - ./backend:/app    # Hot-reload during development
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "5173:5173"
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules   # Don't overwrite node_modules with the host mount
+    command: npm run dev -- --host
