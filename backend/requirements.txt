@@ -5,24 +5,20 @@ fastapi==0.115.0
 uvicorn[standard]==0.30.6
 
 # --- LangGraph ecosystem ---
-# No version pins on any of these — they are tightly coupled to each other
-# and release together. Let pip find a consistent set automatically.
+# No version pins — they are tightly coupled and release together.
 langgraph
 langchain-core
-langgraph-checkpoint-redis
-
-# --- LLM providers ---
-anthropic
-openai
-
-# --- Redis client ---
-redis
-
-# --- HTTP client ---
-httpx
+langchain-anthropic
 
 # --- Data validation ---
 pydantic
+pydantic-settings
+
+# --- HTTP client (for geocoding + weather APIs) ---
+httpx
 
 # --- Utilities ---
 python-dotenv==1.0.1
+
+# --- Testing ---
+pytest

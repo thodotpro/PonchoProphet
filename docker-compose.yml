@@ -1,30 +1,21 @@
 # docker-compose.yml
+# Runs the full stack locally: backend + frontend.
+# Redis removed — weather cache is now SQLite (file-based, zero infrastructure).
+
 version: "3.9"
 
 services:
-  redis:
-    image: redis:8-alpine
-    ports:
-      - "6379:6379"
-    # 🎓 LEARNING COMPLEXITY: In production you'd add persistence flags,
-    # auth, and memory limits. Here we keep it ephemeral on purpose —
-    # restart the container and all conversation history is gone.
-    # That's a good thing to observe while learning.
-
   backend:
     build: ./backend
     ports:
       - "8000:8000"
     environment:
-      - REDIS_URL=redis://redis:6379
-      - LLM_PROVIDER=${LLM_PROVIDER}          # "openai" or "anthropic"
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-claude-3-5-haiku-20241022}
       - WEATHER_CACHE_TTL_SECONDS=${WEATHER_CACHE_TTL_SECONDS:-1800}
-    depends_on:
-      - redis
+      - SQLITE_DB_PATH=${SQLITE_DB_PATH:-weather_cache.db}
     volumes:
-      - ./backend:/app    # Hot-reload during development
+      - ./backend:/app    # Hot-reload: code changes are reflected immediately
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
 
   frontend:
