@@ -1,11 +1,10 @@
 # backend/agents/outfit_agent.py
-# Node 4: the only LLM-powered node. Calls Claude to generate an outfit
-# recommendation based on the current weather and optional user description.
+# Node 4: the only LLM-powered node. Calls the best available LLM (Ollama,
+# OpenAI, or Anthropic) to generate an outfit recommendation.
 
-from langchain_anthropic import ChatAnthropic
+from agents.llm_factory import get_llm
 from langchain_core.messages import HumanMessage, SystemMessage
 
-from app.config import settings
 from graph.state import AgentState
 
 SYSTEM_PROMPT = (
@@ -48,14 +47,9 @@ def outfit_node(state: AgentState) -> dict:
     Reads:  state["weather"], state["description"] (optional)
     Writes: state["answer"]
 
-    Instantiates ChatAnthropic per-request so the model/key can be changed
-    via environment variables without restarting the server.
+    Instantiates the best available LLM via the factory.
     """
-    llm = ChatAnthropic(
-        model=settings.anthropic_model,
-        api_key=settings.anthropic_api_key,
-        max_tokens=512,
-    )
+    llm = get_llm()
 
     messages = [
         SystemMessage(content=SYSTEM_PROMPT),

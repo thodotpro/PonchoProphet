@@ -1,5 +1,5 @@
 # backend/agents/cache_agent.py
-# Node 2: checks the SQLite cache for existing weather data.
+# Node 2: checks the Redis cache for existing weather data.
 
 from graph.state import AgentState
 from tools.query_db import query_db

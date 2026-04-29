@@ -14,7 +14,7 @@ def weather_node(state: AgentState) -> dict:
     Reads:  state["lat"], state["lon"]
     Writes: state["weather"]
 
-    Fetches from Open-Meteo, persists to SQLite so the next identical
+    Fetches from Open-Meteo, persists to Redis so the next identical
     request within the TTL window will be served from cache.
     """
     weather = call_weather_api(state["lat"], state["lon"])
