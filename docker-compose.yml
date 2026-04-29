@@ -7,25 +7,25 @@ services:
     ports:
       - "6379:6379"
 
-  ollama:
+  poncho-ollama:
     image: ollama/ollama:latest
-    container_name: ollama
+    container_name: poncho-ollama
     ports:
       - "11434:11434"
 
   ollama-pull:
     image: curlimages/curl:latest
     depends_on:
-      - ollama
+      - poncho-ollama
     entrypoint: [ "sh", "-c" ]
     command:
       - |
-        while ! curl -s http://ollama:11434/api/tags > /dev/null; do
+        while ! curl -s http://poncho-ollama:11434/api/tags > /dev/null; do
           echo "Waiting for Ollama to start..."
           sleep 2
         done
         echo "Pulling model gemma2:2b..."
-        curl -X POST http://ollama:11434/api/pull -d '{"name": "gemma2:2b"}'
+        curl -X POST http://poncho-ollama:11434/api/pull -d '{"name": "gemma2:2b"}'
         echo "Model pull triggered."
 
   backend:
@@ -40,7 +40,7 @@ services:
       - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-claude-3-5-haiku-20241022}
       - OPENAI_API_KEY=${OPENAI_API_KEY}
       - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
-      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_BASE_URL=http://poncho-ollama:11434
       - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma2:2b}
       - WEATHER_CACHE_TTL_SECONDS=${WEATHER_CACHE_TTL_SECONDS:-1800}
       - REDIS_URL=redis://redis:6379/0
