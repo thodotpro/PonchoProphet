@@ -7,10 +7,17 @@ from langchain_core.language_models.chat_models import BaseChatModel
 
 
 def is_ollama_online() -> bool:
-    """Check if the local Ollama service is reachable."""
+    """Check if the local Ollama service is reachable and has the model."""
     try:
+        # Check if service is up
         response = httpx.get(f"{settings.ollama_base_url}/api/tags", timeout=1.0)
-        return response.status_code == 200
+        if response.status_code != 200:
+            return False
+        
+        # Check if the specific model is already pulled
+        models = [m["name"] for m in response.json().get("models", [])]
+        # Ollama sometimes appends :latest or other tags, so we check for partial match
+        return any(settings.ollama_model in m for m in models)
     except (httpx.RequestError, httpx.ConnectError):
         return False
 

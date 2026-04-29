@@ -25,8 +25,8 @@ services:
           sleep 2
         done
         echo "Pulling model gemma2:2b..."
-        curl -X POST http://poncho-ollama:11434/api/pull -d '{"name": "gemma2:2b"}'
-        echo "Model pull triggered."
+        curl -X POST http://poncho-ollama:11434/api/pull -d '{"name": "gemma2:2b", "stream": false}'
+        echo "Model pull complete."
 
   backend:
     build: ./backend
