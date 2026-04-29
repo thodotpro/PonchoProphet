@@ -8,9 +8,9 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.config import settings
 from graph.graph import build_graph
 from schemas import ChatRequest, ChatResponse
-from tools.save_db import init_db
 
 
 # ---------------------------------------------------------------------------
@@ -19,10 +19,9 @@ from tools.save_db import init_db
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Initialise the SQLite weather cache table on startup."""
-    init_db()
+    """Lifespan hook for startup and shutdown."""
     yield
-    # Nothing to tear down — SQLite connections are opened/closed per call.
+    # Nothing to tear down
 
 
 # ---------------------------------------------------------------------------
@@ -41,7 +40,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],  # Vite dev server
+    allow_origins=settings.allowed_origins_list,
     allow_methods=["*"],
     allow_headers=["*"],
 )

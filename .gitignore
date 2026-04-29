@@ -14,3 +14,6 @@ frontend/node_modules/
 
 # Docker build artifacts
 **/.DS_Store
+
+# SQLite weather cache — generated at runtime, not source code
+backend/weather_cache.db

@@ -9,6 +9,8 @@ uvicorn[standard]==0.30.6
 langgraph
 langchain-core
 langchain-anthropic
+langchain-openai
+langchain-ollama
 
 # --- Data validation ---
 pydantic
@@ -19,6 +21,8 @@ httpx
 
 # --- Utilities ---
 python-dotenv==1.0.1
+redis==5.0.0
+gunicorn==22.0.0
 
 # --- Testing ---
 pytest

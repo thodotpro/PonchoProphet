@@ -1,19 +1,52 @@
 # docker-compose.yml
-# Runs the full stack locally: backend + frontend.
-# Redis removed — weather cache is now SQLite (file-based, zero infrastructure).
+# Runs the full stack locally: backend + frontend + redis.
 
 version: "3.9"
 
 services:
+  redis:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+
+  ollama-pull:
+    image: curlimages/curl:latest
+    depends_on:
+      - ollama
+    entrypoint: [ "sh", "-c" ]
+    command:
+      - |
+        while ! curl -s http://ollama:11434/api/tags > /dev/null; do
+          echo "Waiting for Ollama to start..."
+          sleep 2
+        done
+        echo "Pulling model gemma2:2b..."
+        curl -X POST http://ollama:11434/api/pull -d '{"name": "gemma2:2b"}'
+        echo "Model pull triggered."
+
   backend:
     build: ./backend
     ports:
       - "8000:8000"
+    depends_on:
+      - redis
+      - ollama-pull
     environment:
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
       - ANTHROPIC_MODEL=${ANTHROPIC_MODEL:-claude-3-5-haiku-20241022}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-gemma2:2b}
       - WEATHER_CACHE_TTL_SECONDS=${WEATHER_CACHE_TTL_SECONDS:-1800}
-      - SQLITE_DB_PATH=${SQLITE_DB_PATH:-weather_cache.db}
+      - REDIS_URL=redis://redis:6379/0
+      - ALLOWED_ORIGINS=http://localhost:5173
     volumes:
       - ./backend:/app    # Hot-reload: code changes are reflected immediately
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
