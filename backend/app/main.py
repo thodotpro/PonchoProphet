@@ -84,7 +84,7 @@ async def chat(request: ChatRequest):
     initial_state = {
         "session_id":  request.session_id,
         "location":    request.location,
-        "description": request.description,  # may be None
+        "description": request.message,  # renamed from description to match frontend
     }
 
     try:
