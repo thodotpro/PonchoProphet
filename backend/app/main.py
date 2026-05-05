@@ -1,8 +1,4 @@
-# backend/app/main.py
-# FastAPI application — entry point for the backend.
-# Run locally:  uvicorn app.main:app --reload  (from the backend/ directory)
-# In Docker:    uvicorn app.main:app --host 0.0.0.0 --port 8000
-
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
@@ -12,21 +8,20 @@ from app.config import settings
 from graph.graph import build_graph
 from schemas import ChatRequest, ChatResponse
 
+logger = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Lifespan: runs once at startup and once at shutdown
-# ---------------------------------------------------------------------------
+_graph = build_graph()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan hook for startup and shutdown."""
+    if not settings.anthropic_api_key and not settings.openai_api_key:
+        logger.warning(
+            "No cloud LLM API key configured. "
+            "Requests will fail if Ollama is unreachable."
+        )
     yield
-    # Nothing to tear down
 
-
-# ---------------------------------------------------------------------------
-# App instance
-# ---------------------------------------------------------------------------
 
 app = FastAPI(
     title="PonchoProphet API",
@@ -41,17 +36,12 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.allowed_origins_list,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST"],
+    allow_headers=["Content-Type"],
 )
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 def _format_weather_summary(weather: dict) -> str:
-    """Build a short, human-readable weather string for the UI status bar."""
     return (
         f"{weather['temperature']}{weather['unit_temperature']}, "
         f"{weather['weather_description']}, "
@@ -59,39 +49,31 @@ def _format_weather_summary(weather: dict) -> str:
     )
 
 
-# ---------------------------------------------------------------------------
-# Routes
-# ---------------------------------------------------------------------------
-
 @app.get("/health", tags=["meta"])
 async def health():
-    """Simple liveness probe — useful for docker-compose depends_on checks."""
     return {"status": "ok"}
 
 
 @app.post("/chat", response_model=ChatResponse, tags=["chat"])
 async def chat(request: ChatRequest):
     """
-    Main endpoint. Accepts a location (and optional style description),
-    runs the LangGraph pipeline, and returns an outfit recommendation.
-
     Errors:
         422 — location string could not be geocoded
+        503 — external service (weather API or LLM) unreachable
         500 — unexpected pipeline failure
     """
-    graph = build_graph()
-
     initial_state = {
         "session_id":  request.session_id,
         "location":    request.location,
-        "description": request.message,  # renamed from description to match frontend
+        "description": request.message,
     }
 
     try:
-        final_state = await graph.ainvoke(initial_state)
+        final_state = await _graph.ainvoke(initial_state)
     except ValueError as exc:
-        # Raised by get_geocode() when the location cannot be resolved
         raise HTTPException(status_code=422, detail=str(exc))
+    except (ConnectionError, TimeoutError, OSError) as exc:
+        raise HTTPException(status_code=503, detail=f"External service unavailable: {exc}")
     except Exception as exc:
         raise HTTPException(status_code=500, detail=f"Pipeline error: {exc}")
 

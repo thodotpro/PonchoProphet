@@ -1,5 +1,4 @@
-# backend/tools/redis_client.py
-import redis
+import redis.asyncio as aioredis
 from app.config import settings
 
-redis_client = redis.from_url(settings.redis_url, decode_responses=True)
+redis_client = aioredis.from_url(settings.redis_url, decode_responses=True)

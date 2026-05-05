@@ -1,22 +1,16 @@
-# backend/agents/cache_agent.py
-# Node 2: checks the Redis cache for existing weather data.
-
 from graph.state import AgentState
 from tools.query_db import query_db
 
 
-def cache_node(state: AgentState) -> dict:
+async def cache_node(state: AgentState) -> dict:
     """
     Graph node — Cache lookup.
 
     Reads:  state["lat"], state["lon"]
     Writes: state["weather"] + state["cache_hit"] = True  (on hit)
-            state["cache_hit"] = False                     (on miss)
-
-    The conditional edge in graph.py reads cache_hit to decide whether
-    to skip to outfit_node (hit) or pass through weather_node (miss).
+            state["cache_hit"] = False                     (on miss or Redis error)
     """
-    result = query_db(state["lat"], state["lon"])
+    result = await query_db(state["lat"], state["lon"])
 
     if result is not None:
         return {"weather": result, "cache_hit": True}
