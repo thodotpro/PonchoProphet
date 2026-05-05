@@ -1,7 +1,3 @@
-# backend/agents/outfit_agent.py
-# Node 4: the only LLM-powered node. Calls the best available LLM (Ollama,
-# OpenAI, or Anthropic) to generate an outfit recommendation.
-
 from agents.llm_factory import get_llm
 from langchain_core.messages import HumanMessage, SystemMessage
 
@@ -17,7 +13,6 @@ SYSTEM_PROMPT = (
 
 
 def _build_user_message(state: AgentState) -> str:
-    """Compose the user-facing prompt from weather data and optional description."""
     w = state["weather"]
 
     weather_block = (
@@ -33,28 +28,22 @@ def _build_user_message(state: AgentState) -> str:
 
     description_block = ""
     if state.get("description"):
-        description_block = (
-            f"\nUser's style / self-description:\n{state['description']}\n"
-        )
+        description_block = f"\nUser's style / self-description:\n{state['description']}\n"
 
     return f"{weather_block}{description_block}\nWhat should I wear today?"
 
 
-def outfit_node(state: AgentState) -> dict:
+async def outfit_node(state: AgentState) -> dict:
     """
     Graph node — Outfit recommendation (LLM).
 
     Reads:  state["weather"], state["description"] (optional)
     Writes: state["answer"]
-
-    Instantiates the best available LLM via the factory.
     """
-    llm = get_llm()
-
+    llm = await get_llm()
     messages = [
         SystemMessage(content=SYSTEM_PROMPT),
         HumanMessage(content=_build_user_message(state)),
     ]
-
-    response = llm.invoke(messages)
+    response = await llm.ainvoke(messages)
     return {"answer": response.content}

@@ -1,6 +1,3 @@
-# backend/tools/call_weather_api.py
-# Fetches current weather conditions from Open-Meteo. No API key required.
-
 import httpx
 
 WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
@@ -15,7 +12,6 @@ HOURLY_VARS = [
     "uv_index",
 ]
 
-# WMO weather interpretation codes → human-readable descriptions
 WMO_CODES: dict[int, str] = {
     0:  "Clear sky",
     1:  "Mainly clear", 2: "Partly cloudy", 3: "Overcast",
@@ -31,20 +27,15 @@ WMO_CODES: dict[int, str] = {
 }
 
 
-def call_weather_api(lat: float, lon: float) -> dict:
+async def call_weather_api(lat: float, lon: float) -> dict:
     """
-    Fetch current weather conditions from Open-Meteo for the given coordinates.
-
-    Uses current_weather.time to find the matching hourly slot so all fields
-    (apparent temperature, precipitation, UV index, etc.) align to the same hour.
-
-    Returns a flat dict ready to be stored in the cache and passed to the LLM.
+    Fetch current weather from Open-Meteo for the given coordinates.
 
     Raises:
         httpx.HTTPError: on network or API errors.
     """
-    with httpx.Client(timeout=10.0) as client:
-        response = client.get(
+    async with httpx.AsyncClient(timeout=10.0) as client:
+        response = await client.get(
             WEATHER_URL,
             params={
                 "latitude":        lat,
@@ -58,15 +49,14 @@ def call_weather_api(lat: float, lon: float) -> dict:
         response.raise_for_status()
         data = response.json()
 
-    # current_weather.time is in local timezone, matches hourly.time entries
-    current_time = data["current_weather"]["time"]  # e.g. "2024-01-15T14:00"
+    current_time = data["current_weather"]["time"]
     hourly_times = data["hourly"]["time"]
     try:
         idx = hourly_times.index(current_time)
     except ValueError:
-        idx = 0  # fallback: use first available hour
+        idx = 0
 
-    h     = data["hourly"]
+    h = data["hourly"]
     units = data["hourly_units"]
     weathercode = h["weathercode"][idx]
 
@@ -79,6 +69,6 @@ def call_weather_api(lat: float, lon: float) -> dict:
         "weather_description":       WMO_CODES.get(weathercode, "Unknown"),
         "windspeed":                 round(h["windspeed_10m"][idx], 1),
         "uv_index":                  h["uv_index"][idx],
-        "unit_temperature":          units["temperature_2m"],   # e.g. "°C"
-        "unit_windspeed":            units["windspeed_10m"],    # e.g. "km/h"
+        "unit_temperature":          units["temperature_2m"],
+        "unit_windspeed":            units["windspeed_10m"],
     }
