@@ -10,7 +10,7 @@ async def test_get_llm_prefers_ollama_when_available():
     with patch("agents.llm_factory.is_ollama_online", new_callable=AsyncMock, return_value=True):
         llm = await get_llm()
         assert isinstance(llm, ChatOllama)
-        assert llm.model == "gemma2:2b"
+        assert llm.model == "gemma4:e2b"
 
 
 async def test_get_llm_falls_back_to_openai():
