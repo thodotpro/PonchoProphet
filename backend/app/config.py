@@ -14,14 +14,15 @@ class Settings(BaseSettings):
     anthropic_model:           str = "claude-haiku-4-5-20251001"
 
     openai_api_key:            Optional[str] = None
+    openai_base_url:           Optional[str] = None
     openai_model:              str = "gpt-4o-mini"
 
     ollama_base_url:           str = "http://localhost:11434"
-    ollama_model:              str = "gemma2:2b"
+    ollama_model:              str = "gemma4:e2b"
 
     weather_cache_ttl_seconds: int = 1800
     redis_url:                 str = "redis://localhost:6379/0"
-    allowed_origins:           str = "http://localhost:5173"
+    allowed_origins:           str = "*"
 
     @property
     def allowed_origins_list(self) -> list[str]:

@@ -38,7 +38,7 @@
       />
       <input
         v-model="messageInput"
-        placeholder="What should I wear today?"
+        placeholder="Describe your style — casual, smart, love layers… (optional)"
         class="message-input"
         :disabled="isLoading"
         @keydown.enter="sendMessage"
@@ -60,7 +60,7 @@ import StatusBadge from './StatusBadge.vue'
 const sessionId = uuidv4()
 const messages = ref([])
 const locationInput = ref('')
-const messageInput = ref('What should I wear today?')
+const messageInput = ref('')
 const isLoading = ref(false)
 const currentAgent = ref(null)
 const weatherSummary = ref('')
@@ -79,30 +79,20 @@ async function sendMessage() {
   currentAgent.value = 'supervisor'
 
   try {
-    // --- TEMPORARY: fake response so UI works without backend ---
-    // Delete this block and uncomment the fetch() below once backend is ready
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    const data = {
-      answer: "It's 8°C and rainy in Vienna. Wear a waterproof jacket, warm layers underneath, and waterproof shoes. Don't forget an umbrella! 🌧️",
-      weather_summary: "8°C, light rain, wind 15 km/h",
-      active_agent: "outfit_agent",
-      cache_hit: false,
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: sessionId,
+        location: locationInput.value,
+        message: messageInput.value || null,
+      }),
+    })
+    if (!response.ok) {
+      const err = await response.json().catch(() => ({ detail: response.statusText }))
+      throw new Error(err.detail || `Server error: ${response.status}`)
     }
-    // --- END TEMPORARY ---
-
-    // --- REAL fetch — uncomment this when backend is running ---
-    // const response = await fetch('/api/chat', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({
-    //     session_id: sessionId,
-    //     location: locationInput.value,
-    //     message: messageInput.value,
-    //   }),
-    // })
-    // if (!response.ok) throw new Error(`Server error: ${response.status}`)
-    // const data = await response.json()
-    // --- END REAL fetch ---
+    const data = await response.json()
 
     messages.value.push({ role: 'assistant', text: data.answer })
     weatherSummary.value = data.weather_summary

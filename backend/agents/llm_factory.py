@@ -34,7 +34,11 @@ async def get_llm() -> BaseChatModel:
 
     if settings.openai_api_key:
         logger.info("LLM provider selected: openai (%s)", settings.openai_model)
-        return ChatOpenAI(model=settings.openai_model, api_key=settings.openai_api_key)
+        return ChatOpenAI(
+            model=settings.openai_model,
+            api_key=settings.openai_api_key,
+            base_url=settings.openai_base_url or None,
+        )
 
     if settings.anthropic_api_key:
         logger.info("LLM provider selected: anthropic (%s)", settings.anthropic_model)
