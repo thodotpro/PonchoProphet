@@ -17,14 +17,14 @@ import { computed } from 'vue'
 const props = defineProps({
   agent: {
     type: String,
-    default: null
+    default: null,
     // Expected values: 'supervisor', 'cache_agent',
     //                  'weather_agent', 'outfit_agent'
   },
   loading: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
 })
 
 // Maps the internal agent name from the backend to a human-readable label.
@@ -32,10 +32,10 @@ const props = defineProps({
 // "Checking weather cache..." — making the agent graph legible.
 const label = computed(() => {
   const labels = {
-    supervisor:     'Supervisor is routing...',
-    cache_agent:    'Checking weather cache...',
-    weather_agent:  'Fetching live weather...',
-    outfit_agent:   'Generating outfit recommendation...',
+    supervisor: 'Supervisor is routing...',
+    cache_agent: 'Checking weather cache...',
+    weather_agent: 'Fetching live weather...',
+    outfit_agent: 'Generating outfit recommendation...',
   }
   return labels[props.agent] ?? 'Thinking...'
 })
@@ -43,30 +43,40 @@ const label = computed(() => {
 
 <style scoped>
 .status-badge {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  padding: 6px 12px;
-  background: #EEEDFE;
-  color: #3C3489;
-  border-radius: 20px;
+  padding: 6px 14px;
+  background: var(--deep);
+  color: #ffffff;
+  border-radius: 9999px; /* Full-pill, brochure style */
+  font-family: 'Nunito', sans-serif;
   font-size: 12px;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.2px;
   width: fit-content;
   margin: 0 0 10px 0;
+  box-shadow: 0 2px 6px rgba(2, 119, 189, 0.2);
 }
 
 .dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #534AB7;
+  background: var(--sun);
   /* Pulse animation so it's obvious something is happening */
   animation: pulse 1.2s ease-in-out infinite;
 }
 
 @keyframes pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50%       { opacity: 0.4; transform: scale(0.8); }
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.8);
+  }
 }
 </style>

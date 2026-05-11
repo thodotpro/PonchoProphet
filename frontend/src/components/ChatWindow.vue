@@ -52,10 +52,19 @@
 </template>
 
 <script setup>
-import { ref, nextTick } from 'vue'
+import { ref, nextTick, onMounted } from 'vue'
 import { v4 as uuidv4 } from 'uuid'
 import MessageBubble from './MessageBubble.vue'
 import StatusBadge from './StatusBadge.vue'
+
+// Optional pre-fill props (used by the wizard's Step 3 hand-off).
+// When omitted, the chat behaves exactly as before: empty inputs,
+// user types manually and clicks Send.
+const props = defineProps({
+  initialLocation: { type: String, default: '' },
+  initialStyle: { type: String, default: '' },
+  autoSubmit: { type: Boolean, default: false },
+})
 
 const sessionId = uuidv4()
 const messages = ref([])
@@ -67,12 +76,30 @@ const weatherSummary = ref('')
 const lastCacheHit = ref(false)
 const messageList = ref(null)
 
+onMounted(async () => {
+  // Pre-fill inputs from wizard answers if provided.
+  if (props.initialLocation) locationInput.value = props.initialLocation
+  if (props.initialStyle) messageInput.value = props.initialStyle
+
+  // Auto-submit the first message when arriving from a completed wizard.
+  if (
+    props.autoSubmit &&
+    props.initialLocation &&
+    props.initialLocation.trim() !== '' &&
+    props.initialStyle &&
+    props.initialStyle.trim() !== ''
+  ) {
+    await nextTick()
+    sendMessage()
+  }
+})
+
 async function sendMessage() {
   if (!locationInput.value || isLoading.value) return
 
   messages.value.push({
     role: 'user',
-    text: `${locationInput.value} — ${messageInput.value}`,
+    text: `${locationInput.value} - ${messageInput.value}`,
   })
 
   isLoading.value = true
@@ -94,7 +121,13 @@ async function sendMessage() {
     }
     const data = await response.json()
 
-    messages.value.push({ role: 'assistant', text: data.answer })
+    // Attach weather_summary to the assistant message so MessageBubble
+    // can pick the right PonchoChar mood (sunny/rainy/cold/thinking).
+    messages.value.push({
+      role: 'assistant',
+      text: data.answer,
+      weatherSummary: data.weather_summary,
+    })
     weatherSummary.value = data.weather_summary
     lastCacheHit.value = data.cache_hit
     currentAgent.value = null
@@ -118,27 +151,30 @@ async function sendMessage() {
   flex-direction: column;
   height: 100vh;
   background: #ffffff;
-  border-left: 1px solid #e8e8e8;
-  border-right: 1px solid #e8e8e8;
+  border-left: 1px solid var(--light);
+  border-right: 1px solid var(--light);
+  font-family: 'Nunito', sans-serif;
 }
 
 /* ── Header ── */
 .chat-header {
-  padding: 20px 24px 16px;
-  border-bottom: 1px solid #f0f0f0;
-  background: #ffffff;
+  padding: 22px 24px 18px;
+  border-bottom: 1px solid var(--light);
+  background: linear-gradient(160deg, var(--cloud) 0%, var(--mint) 100%);
 }
 
 .chat-header h1 {
-  font-size: 20px;
-  font-weight: 600;
-  color: #1a1a1a;
+  font-family: 'Playfair Display', serif;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--deep);
   margin-bottom: 2px;
+  letter-spacing: -0.3px;
 }
 
 .chat-header p {
   font-size: 13px;
-  color: #888;
+  color: var(--mid);
 }
 
 /* ── Status badge sits just below the header ── */
@@ -153,11 +189,12 @@ async function sendMessage() {
   padding: 20px 24px;
   display: flex;
   flex-direction: column;
+  background: #ffffff;
 }
 
 .empty-state {
   margin: auto;
-  color: #bbb;
+  color: var(--mid);
   font-size: 14px;
   text-align: center;
 }
@@ -167,7 +204,7 @@ async function sendMessage() {
   display: flex;
   gap: 4px;
   padding: 10px 14px;
-  background: #f5f5f5;
+  background: var(--cloud);
   border-radius: 16px;
   border-bottom-left-radius: 4px;
   width: fit-content;
@@ -178,7 +215,7 @@ async function sendMessage() {
   width: 7px;
   height: 7px;
   border-radius: 50%;
-  background: #aaa;
+  background: var(--teal);
   animation: bounce 1.2s ease-in-out infinite;
 }
 
@@ -195,20 +232,23 @@ async function sendMessage() {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 8px 24px;
-  background: #f9f9f9;
-  border-top: 1px solid #f0f0f0;
+  padding: 10px 24px;
+  background: var(--cloud);
+  border-top: 1px solid var(--light);
   font-size: 13px;
-  color: #555;
+  font-weight: 500;
+  color: var(--mid);
 }
 
 .cache-badge {
-  background: #e1f5ee;
-  color: #085041;
+  background: var(--teal);
+  color: #ffffff;
   font-size: 11px;
-  font-weight: 500;
-  padding: 2px 8px;
-  border-radius: 20px;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
 }
 
 /* ── Input area ── */
@@ -216,55 +256,64 @@ async function sendMessage() {
   display: flex;
   gap: 8px;
   padding: 16px 24px;
-  border-top: 1px solid #f0f0f0;
+  border-top: 1px solid var(--light);
   background: #ffffff;
+}
+
+.location-input,
+.message-input {
+  font-family: 'Nunito', sans-serif;
+  padding: 10px 14px;
+  border: 1px solid var(--light);
+  border-radius: 12px;
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  background: #ffffff;
+  color: var(--dark);
 }
 
 .location-input {
   width: 180px;
   flex-shrink: 0;
-  padding: 10px 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 10px;
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.15s;
 }
 
 .message-input {
   flex: 1;
-  padding: 10px 12px;
-  border: 1px solid #e0e0e0;
-  border-radius: 10px;
-  font-size: 13px;
-  outline: none;
-  transition: border-color 0.15s;
 }
 
 .location-input:focus,
 .message-input:focus {
-  border-color: #534AB7;
+  border-color: var(--deep);
+  box-shadow: 0 0 0 3px rgba(2, 119, 189, 0.18);
 }
 
 button {
-  padding: 10px 20px;
-  background: #534AB7;
-  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  padding: 10px 22px;
+  background: var(--deep);
+  color: #ffffff;
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 14px;
-  font-weight: 500;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: background 0.15s, transform 0.05s;
   white-space: nowrap;
+  letter-spacing: 0.2px;
 }
 
 button:hover:not(:disabled) {
-  background: #3C3489;
+  background: #01579b; /* slightly darker than --deep (#0277bd) */
+}
+
+button:active:not(:disabled) {
+  transform: translateY(1px);
 }
 
 button:disabled {
-  background: #c0bce8;
+  background: var(--light);
+  color: var(--mid);
   cursor: not-allowed;
 }
 </style>

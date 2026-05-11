@@ -1,8 +1,10 @@
-// frontend/src/main.js
-// Entry point — Vue reads this file first.
-// It mounts the root App component onto the <div id="app"> in index.html.
-
 import { createApp } from 'vue'
 import App from './App.vue'
+import { router } from './router.js'
 
-createApp(App).mount('#app')
+import './assets/styles/tokens.css'
+import 'bulma/css/bulma.min.css'
+import './assets/styles/bulma-overrides.css'
+import './assets/styles/global.css'
+
+createApp(App).use(router).mount('#app')
