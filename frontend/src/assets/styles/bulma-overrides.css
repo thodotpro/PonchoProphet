@@ -1,0 +1,19 @@
+:root {
+  --bulma-primary-h:            200;
+  --bulma-primary-s:            97%;
+  --bulma-primary-l:            37%;
+
+  --bulma-link-h:               189;
+  --bulma-link-s:               100%;
+  --bulma-link-l:               38%;
+
+  --bulma-family-primary:       'Nunito', system-ui, sans-serif;
+  --bulma-family-secondary:     'Playfair Display', Georgia, serif;
+
+  --bulma-radius-small:         8px;
+  --bulma-radius:               12px;
+  --bulma-radius-large:         18px;
+
+  --bulma-body-background-color: #e8f4f8;
+  --bulma-body-color:           var(--dark);
+}
